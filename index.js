@@ -33,11 +33,43 @@ io.on('connection', (socket) => {
 
     io.to(session).emit('users', currentSession.users);
     io.to(session).emit('joined', currentUser);
-    
+
+    socket.on('vote', (vote) => {
+      currentSession.users = currentSession.users.map(u => {
+        return u.id === currentUser.id ? { ...u, vote } : u;
+      });
+
+      io.to(session).emit('users', currentSession.users);
+      
+      let numVotes = 0;
+      currentSession.users.forEach(u => {
+        if (u.vote) {
+          numVotes++;
+        }
+      });
+      if (numVotes === currentSession.users.length) {
+        io.to(session).emit('reveal');
+      }
+    });
+
+    socket.on('reset', () => {
+      currentSession.users.forEach(u => {
+        delete u.vote;
+      });
+
+      io.to(session).emit('reset');
+      io.to(session).emit('users', currentSession.users);
+    });
+
+    socket.on('reveal', () => {
+      io.to(session).emit('reveal');
+    });
+
     socket.on('disconnect', () => {
       currentSession.users = currentSession.users.filter(
         u => u.id !== socket.id
       );
+
       io.to(session).emit('users', currentSession.users);
       io.to(session).emit('left', currentUser);
     });

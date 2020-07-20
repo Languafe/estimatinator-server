@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  estimatinator:
+    image: estimatinator:latest
+    volumes:
+      - ./:/app
+    ports:
+      - 5000:5000
